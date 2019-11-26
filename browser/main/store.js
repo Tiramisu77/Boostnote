@@ -14,7 +14,8 @@ function defaultDataMap () {
     storageNoteMap: new Map(),
     folderNoteMap: new Map(),
     tagNoteMap: new Map(),
-    trashedSet: new Set()
+    trashedSet: new Set(),
+    cryptokeysMap: new Map()
   }
 }
 
@@ -50,6 +51,13 @@ function data (state = defaultDataMap(), action) {
           assignToTags(note.tags, state, uniqueKey)
         }
       })
+
+      if (action.cryptoKeyStore) {
+        for (const { storage, pubkey, privkey } of action.cryptoKeyStore.storages) {
+          state.cryptokeysMap.set(storage, { pubkey, privkey })
+        }
+      }
+
       return state
     case 'UPDATE_NOTE':
       {
@@ -357,6 +365,13 @@ function data (state = defaultDataMap(), action) {
       state.storageMap = new Map(state.storageMap)
       action.storage.isOpen = action.isOpen
       state.storageMap.set(action.storage.key, action.storage)
+      return state
+    case 'SET_CRYPTOKEYS':
+      state = Object.assign({}, state)
+      for (const { storage, pubkey, privkey } of action.cryptoKeyStore.storages) {
+        state.cryptokeysMap.set(storage, { pubkey, privkey })
+      }
+
       return state
   }
   return state

@@ -139,6 +139,12 @@ class Main extends React.Component {
       })
   }
 
+  initCryptoKeyStore () {
+    dataApi.createCryptoKeyStore(path.join(remote.app.getPath('home'))).then(cryptoKeyStore => {
+      store.dispatch({ type: 'SET_CRYPTOKEYS', cryptoKeyStore })
+    })
+  }
+
   componentDidMount () {
     const { dispatch, config } = this.props
 
@@ -161,11 +167,16 @@ class Main extends React.Component {
       dispatch({
         type: 'INIT_ALL',
         storages: data.storages,
-        notes: data.notes
+        notes: data.notes,
+        cryptoKeyStore: data.cryptoKeyStore
       })
 
       if (data.storages.length < 1) {
         this.init()
+      }
+
+      if (!data.cryptoKeyStore) {
+        this.initCryptoKeyStore()
       }
     })
 
@@ -185,7 +196,7 @@ class Main extends React.Component {
     const { config } = this.props
     const { ui } = config
 
-    const newUI = Object.assign(ui, {showMenuBar: !ui.showMenuBar})
+    const newUI = Object.assign(ui, { showMenuBar: !ui.showMenuBar })
     const newConfig = Object.assign(config, newUI)
     ConfigManager.set(newConfig)
   }

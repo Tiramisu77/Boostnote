@@ -2,6 +2,7 @@
 const _ = require('lodash')
 const resolveStorageData = require('./resolveStorageData')
 const resolveStorageNotes = require('./resolveStorageNotes')
+const resolveCryptoKeyStore = require('./resolveCryptoKeyStore')
 const consts = require('browser/lib/consts')
 const path = require('path')
 const fs = require('fs')
@@ -12,6 +13,7 @@ const CSON = require('@rokt33r/season')
  * {
  *   storages: [...],
  *   notes: [...]
+ *   cryptoKeyStore: {...}|undefined
  * }
  * ```
  *
@@ -40,7 +42,7 @@ function init () {
 
   const fetchNotes = function (storages) {
     const findNotesFromEachStorage = storages
-    .filter(storage => fs.existsSync(storage.path))
+      .filter(storage => fs.existsSync(storage.path))
       .map((storage) => {
         return resolveStorageNotes(storage)
           .then((notes) => {
@@ -79,6 +81,22 @@ function init () {
       })
   }
 
+  const fetchCryptoKeys = function (data) {
+    try {
+      const { path } = JSON.parse(window.localStorage.getItem('cryptoKeyStore'))
+      return resolveCryptoKeyStore(path).then(cryptoKeyStore => {
+        data.cryptoKeyStore = cryptoKeyStore
+        return data
+      }).catch((e) => {
+        console.warn(e)
+        return data
+      })
+    } catch (e) {
+      console.warn('failed to load crypto keys', e)
+      return data
+    }
+  }
+
   return Promise.resolve(fetchStorages())
     .then((storages) => {
       return storages
@@ -88,5 +106,6 @@ function init () {
         })
     })
     .then(fetchNotes)
+    .then(fetchCryptoKeys)
 }
 module.exports = init
